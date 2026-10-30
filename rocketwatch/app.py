@@ -8,6 +8,7 @@ import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+import pydeck as pdk
 import requests
 import streamlit as st
 
@@ -23,6 +24,8 @@ PACIFIC = ZoneInfo("America/Los_Angeles")
 # computed with the standard compass-bearing formula -> 287 degrees = west-northwest, 235 km away.
 LOOK_DIRECTION = "West-northwest (compass 287°)"
 DISTANCE_KM = 235
+BEARING_DEG = 287
+PCC_LAT, PCC_LON = 34.1478, -118.1445  # Pasadena City College campus
 
 st.set_page_config(page_title="Rocket Watch PCC", page_icon="🚀", layout="centered")
 
@@ -193,6 +196,80 @@ st.write(
     "weather permitting — look for a bright moving light climbing from the "
     "west-northwest horizon in the minutes after liftoff."
 )
+
+# ----- compass rose: point yourself the right way ----------------------------
+st.subheader("Point yourself the right way")
+st.markdown(
+    f"""
+<div style="text-align:center">
+<svg width="220" height="220" viewBox="-110 -110 220 220">
+  <circle r="100" fill="rgba(11,16,48,0.6)" stroke="#9fb4ff" stroke-width="2"/>
+  <g font-family="Courier New" font-size="16" fill="#9fb4ff" text-anchor="middle">
+    <text y="-84">N</text><text x="90" y="6">E</text>
+    <text y="96">S</text><text x="-90" y="6">W</text>
+  </g>
+  <g transform="rotate({BEARING_DEG})">
+    <polygon points="0,-95 9,-68 -9,-68" fill="#4ade80"
+             style="filter: drop-shadow(0 0 7px #4ade80)"/>
+    <line x1="0" y1="-68" x2="0" y2="0" stroke="#4ade80" stroke-width="3"/>
+  </g>
+  <circle r="4" fill="#7dd3fc"/>
+</svg>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+st.caption(
+    f"The green arrow points at {BEARING_DEG}° — open your phone's compass, "
+    f"turn until it reads {BEARING_DEG}°, and you are facing the launch."
+)
+
+# ----- map: the sight line from campus to the pad -----------------------------
+# The pad's own coordinates come with the launch data (they arrive as text,
+# so we convert them to numbers; if they're ever missing we just skip the map).
+try:
+    pad = next_launch.get("pad", {})
+    pad_lat, pad_lon = float(pad["latitude"]), float(pad["longitude"])
+    st.subheader("The sight line")
+    st.pydeck_chart(
+        pdk.Deck(
+            map_provider="carto",
+            map_style="dark",
+            initial_view_state=pdk.ViewState(
+                latitude=(PCC_LAT + pad_lat) / 2,
+                longitude=(PCC_LON + pad_lon) / 2,
+                zoom=6.3,
+            ),
+            layers=[
+                pdk.Layer(
+                    "LineLayer",
+                    data=[{"start": [PCC_LON, PCC_LAT], "end": [pad_lon, pad_lat]}],
+                    get_source_position="start",
+                    get_target_position="end",
+                    get_color=[125, 211, 252],
+                    get_width=4,
+                ),
+                pdk.Layer(
+                    "ScatterplotLayer",
+                    data=[
+                        {"pos": [PCC_LON, PCC_LAT], "label": "PCC"},
+                        {"pos": [pad_lon, pad_lat], "label": pad.get("name", "Pad")},
+                    ],
+                    get_position="pos",
+                    get_radius=4500,
+                    get_fill_color=[192, 132, 252],
+                    pickable=True,
+                ),
+            ],
+            tooltip={"text": "{label}"},
+        )
+    )
+    st.caption(
+        f"{DISTANCE_KM} km from PCC to {pad.get('name', 'the pad')} at Vandenberg. "
+        "Map tiles © CARTO / OpenStreetMap contributors."
+    )
+except (KeyError, TypeError, ValueError):
+    pass  # no pad coordinates in the data — the map just doesn't appear
 
 st.info(
     "Launch times change often — this page re-checks the schedule every "
