@@ -4,6 +4,7 @@
 # and only ask again every 10 minutes, because the API limits how often you may call it.
 
 import json
+import math
 import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -29,6 +30,7 @@ PCC_LAT, PCC_LON = 34.1478, -118.1445  # Pasadena City College campus
 STREAM_CACHE_FILE = Path(__file__).parent / "stream.json"
 WEATHER_PCC_FILE = Path(__file__).parent / "weather_pcc.json"
 WEATHER_PAD_FILE = Path(__file__).parent / "weather_pad.json"
+GEOCODE_CACHE_FILE = Path(__file__).parent / "geocode.json"
 # At 235 km, Earth's curve hides everything below d*d/(2*R) = 4.3 km altitude.
 # A Falcon 9 climbs past that roughly a minute after liftoff.
 HIDDEN_KM = 4.3
@@ -213,6 +215,82 @@ def get_cloud_cover(lat, lon, when_local, cache_file):
     return None
 
 
+def compass_rose_svg(bearing):
+    """The compass drawing with a glowing green arrow at the given bearing."""
+    return f"""
+<div style="text-align:center">
+<svg width="220" height="220" viewBox="-110 -110 220 220">
+  <circle r="100" fill="rgba(11,16,48,0.6)" stroke="#9fb4ff" stroke-width="2"/>
+  <g font-family="Courier New" font-size="16" fill="#9fb4ff" text-anchor="middle">
+    <text y="-84">N</text><text x="90" y="6">E</text>
+    <text y="96">S</text><text x="-90" y="6">W</text>
+  </g>
+  <g transform="rotate({bearing})">
+    <polygon points="0,-95 9,-68 -9,-68" fill="#4ade80"
+             style="filter: drop-shadow(0 0 7px #4ade80)"/>
+    <line x1="0" y1="-68" x2="0" y2="0" stroke="#4ade80" stroke-width="3"/>
+  </g>
+  <circle r="4" fill="#7dd3fc"/>
+</svg>
+</div>
+"""
+
+
+def geocode(address):
+    """Turn a typed address into map coordinates.
+
+    Uses OpenStreetMap's free Nominatim service, following its rules:
+    a real app name, at most one lookup per click, and every answer cached.
+    """
+    cache = {}
+    if GEOCODE_CACHE_FILE.exists():
+        cache = json.loads(GEOCODE_CACHE_FILE.read_text(encoding="utf-8"))
+    key = address.strip().lower()
+    if key in cache:
+        return cache[key]
+    try:
+        answer = requests.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={"q": address, "format": "json", "limit": 1},
+            headers={
+                "User-Agent": "RocketWatchPCC-LancerHacks/1.0 (student hackathon project)"
+            },
+            timeout=10,
+        )
+        answer.raise_for_status()
+        found = answer.json()
+        result = [float(found[0]["lat"]), float(found[0]["lon"])] if found else None
+    except Exception:
+        return None
+    cache[key] = result
+    GEOCODE_CACHE_FILE.write_text(json.dumps(cache, indent=2), encoding="utf-8")
+    return result
+
+
+def bearing_and_distance(lat1, lon1, lat2, lon2):
+    """Compass bearing and straight-line distance from point 1 to point 2."""
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dl = math.radians(lon2 - lon1)
+    x = math.sin(dl) * math.cos(p2)
+    y = math.cos(p1) * math.sin(p2) - math.sin(p1) * math.cos(p2) * math.cos(dl)
+    bearing = (math.degrees(math.atan2(x, y)) + 360) % 360
+    a = (
+        math.sin((p2 - p1) / 2) ** 2
+        + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    )
+    km = 2 * 6371 * math.asin(math.sqrt(a))
+    return bearing, km
+
+
+COMPASS_POINTS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+                  "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+
+
+def compass_point(bearing):
+    """Turn degrees into a name people know, like WNW."""
+    return COMPASS_POINTS[int((bearing + 11.25) // 22.5) % 16]
+
+
 # ----- page -----------------------------------------------------------------
 st.title("🚀 Rocket Watch PCC")
 st.caption("Real rockets launch 235 km from this campus. This page tells you when and where to look.")
@@ -282,26 +360,7 @@ rose_col, stream_col = st.columns(2)
 
 with rose_col:
     st.subheader("Point yourself the right way")
-    st.markdown(
-        f"""
-<div style="text-align:center">
-<svg width="220" height="220" viewBox="-110 -110 220 220">
-  <circle r="100" fill="rgba(11,16,48,0.6)" stroke="#9fb4ff" stroke-width="2"/>
-  <g font-family="Courier New" font-size="16" fill="#9fb4ff" text-anchor="middle">
-    <text y="-84">N</text><text x="90" y="6">E</text>
-    <text y="96">S</text><text x="-90" y="6">W</text>
-  </g>
-  <g transform="rotate({BEARING_DEG})">
-    <polygon points="0,-95 9,-68 -9,-68" fill="#4ade80"
-             style="filter: drop-shadow(0 0 7px #4ade80)"/>
-    <line x1="0" y1="-68" x2="0" y2="0" stroke="#4ade80" stroke-width="3"/>
-  </g>
-  <circle r="4" fill="#7dd3fc"/>
-</svg>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
+    st.markdown(compass_rose_svg(BEARING_DEG), unsafe_allow_html=True)
     st.caption(
         f"The green arrow points at {BEARING_DEG}° — open your phone's compass, "
         f"turn until it reads {BEARING_DEG}°, and you are facing the launch."
@@ -419,6 +478,57 @@ with lists_col:
         status = launch.get("status", {}).get("name", "Unknown")
         badge = "✅" if "success" in status.lower() else "⚠️"
         st.write(f"{badge} **{t.strftime('%b %d, %I:%M %p')}** — {launch['name']} — {status}")
+
+# ----- from anywhere: your own viewing direction ------------------------------
+st.subheader("From where YOU are")
+st.caption(
+    "Not on campus? Type any address and pick any launch — "
+    "tonight's, a future one, or one that already flew."
+)
+
+launch_choices = {}
+for lnch in future:
+    t = launch_time(lnch).astimezone(PACIFIC)
+    launch_choices[f"UPCOMING — {t.strftime('%b %d, %I:%M %p')} — {lnch['name']}"] = lnch
+for lnch in get_previous_launches():
+    t = launch_time(lnch).astimezone(PACIFIC)
+    launch_choices[f"PAST — {t.strftime('%b %d, %I:%M %p')} — {lnch['name']}"] = lnch
+
+with st.form("address_form"):
+    addr_col, pick_col = st.columns(2)
+    address = addr_col.text_input(
+        "Your address or place",
+        placeholder="e.g. 1570 E Colorado Blvd, Pasadena",
+    )
+    choice = pick_col.selectbox("Which launch?", list(launch_choices.keys()))
+    asked = st.form_submit_button("Where do I look?")
+
+if asked and address.strip():
+    spot = geocode(address)
+    if spot is None:
+        st.error("Couldn't find that address — try adding the city, like 'Pasadena CA'.")
+    else:
+        chosen = launch_choices[choice]
+        try:
+            cpad = chosen.get("pad", {})
+            c_lat, c_lon = float(cpad["latitude"]), float(cpad["longitude"])
+        except (KeyError, TypeError, ValueError):
+            c_lat = None
+            st.error("That launch has no pad location in the data.")
+        if c_lat is not None:
+            brg, km = bearing_and_distance(spot[0], spot[1], c_lat, c_lon)
+            you1, you2, you3 = st.columns(3)
+            you1.metric("Look toward", f"{compass_point(brg)}")
+            you2.metric("Compass bearing", f"{round(brg)}°")
+            you3.metric("Distance", f"{round(km)} km")
+            st.markdown(compass_rose_svg(round(brg)), unsafe_allow_html=True)
+            st.caption(
+                f"Turn until your phone's compass reads {round(brg)}° — you're facing "
+                f"{cpad.get('name', 'the pad')}. "
+                "Address search by Nominatim © OpenStreetMap contributors."
+            )
+elif asked:
+    st.error("Type an address first.")
 
 st.info(
     "Launch times change often — this page re-checks the schedule every "
