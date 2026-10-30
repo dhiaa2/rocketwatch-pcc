@@ -378,6 +378,16 @@ with stream_col:
             "automatically the moment a host publishes one."
         )
 
+    # The announcer: an AI voice reading what the tracker computed.
+    audio_dir = Path(__file__).parent / "audio"
+    if (audio_dir / "announcement.mp3").exists():
+        st.markdown("**🔊 The Launch Announcer** — voice by ElevenLabs, "
+                    "script written from this page's own live data.")
+        st.audio(str(audio_dir / "announcement.mp3"))
+    if (audio_dir / "liftoff.mp3").exists():
+        st.caption("And for the moment itself:")
+        st.audio(str(audio_dir / "liftoff.mp3"))
+
 # ----- will you actually SEE it? ----------------------------------------------
 st.subheader("Will you see it from campus?")
 pcc_clouds = get_cloud_cover(PCC_LAT, PCC_LON, t_local, WEATHER_PCC_FILE)
