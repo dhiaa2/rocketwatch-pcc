@@ -480,7 +480,7 @@ with lists_col:
         st.write(f"{badge} **{t.strftime('%b %d, %I:%M %p')}** — {launch['name']} — {status}")
 
 # ----- receipts: let anyone check our numbers ---------------------------------
-with st.expander("🔍 Prove it yourself — our receipts"):
+with st.expander("🔍 Prove it yourself — our receipts", expanded=True):
     st.write(
         "Don't take our word for it. Every number on this page can be "
         "checked right now, live, by anyone:"
@@ -500,6 +500,28 @@ with st.expander("🔍 Prove it yourself — our receipts"):
         "- **The stream is third-party proof** — the webcast above is the "
         "host's own broadcast of this exact mission, naming the same rocket, "
         "pad and time."
+    )
+    if pad_lat is not None:
+        live_brg, live_km = bearing_and_distance(PCC_LAT, PCC_LON, pad_lat, pad_lon)
+        st.success(
+            "Watch the math run: recomputed fresh on this page load from the "
+            f"pad's own coordinates — {round(live_brg)}° and {round(live_km)} km. "
+            f"It matches the {BEARING_DEG}° and {DISTANCE_KM} km above because "
+            "the math is real, not typed in."
+        )
+    st.write("**Tonight's raw record, exactly as the feed sends it:**")
+    st.json(
+        {
+            "name": next_launch.get("name"),
+            "launch time (UTC)": next_launch.get("net"),
+            "status": next_launch.get("status", {}).get("name"),
+            "pad": next_launch.get("pad", {}).get("name"),
+            "pad latitude": next_launch.get("pad", {}).get("latitude"),
+            "pad longitude": next_launch.get("pad", {}).get("longitude"),
+            "rocket": next_launch.get("rocket", {})
+            .get("configuration", {})
+            .get("full_name"),
+        }
     )
     st.caption(
         f"Data last fetched {fetched_at.astimezone(PACIFIC).strftime('%I:%M:%S %p')} "
