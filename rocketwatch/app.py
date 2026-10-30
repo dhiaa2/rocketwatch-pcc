@@ -24,6 +24,46 @@ DISTANCE_KM = 235
 
 st.set_page_config(page_title="Rocket Watch PCC", page_icon="🚀", layout="centered")
 
+# ----- look & feel ----------------------------------------------------------
+# A starfield drawn in pure CSS (no image file, nothing to license).
+# The team may later swap in a NASA photo (public domain, credit NASA).
+st.markdown("""
+<style>
+.stApp {
+  background:
+    radial-gradient(1.5px 1.5px at 25px 35px,  #ffffff, transparent),
+    radial-gradient(1px   1px   at 120px 90px, #cfd8ff, transparent),
+    radial-gradient(1.5px 1.5px at 210px 160px,#ffffff, transparent),
+    radial-gradient(1px   1px   at 60px 140px, #9fb4ff, transparent),
+    radial-gradient(1px   1px   at 170px 40px, #ffffff, transparent),
+    linear-gradient(180deg, #04060f 0%, #0b1030 55%, #1a1448 100%);
+  background-size: 250px 250px, 250px 250px, 250px 250px, 250px 250px, 250px 250px, 100% 100%;
+}
+h1 {
+  background: linear-gradient(90deg, #7dd3fc, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.countdown {
+  font-family: 'Courier New', monospace;
+  font-size: 72px;
+  font-weight: bold;
+  text-align: center;
+  color: #7dd3fc;
+  text-shadow: 0 0 18px rgba(125, 211, 252, 0.6);
+  margin: 0.2em 0;
+}
+.countdown-label {
+  text-align: center;
+  color: #9fb4ff;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+#MainMenu, footer, header {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
+
 
 # ----- data -----------------------------------------------------------------
 def get_launches():
@@ -98,7 +138,11 @@ def countdown():
         return
     hours, rest = divmod(total, 3600)
     minutes, seconds = divmod(rest, 60)
-    st.metric("Countdown (T-minus)", f"{hours:02d} : {minutes:02d} : {seconds:02d}")
+    st.markdown("<div class='countdown-label'>T-minus</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div class='countdown'>{hours:02d} : {minutes:02d} : {seconds:02d}</div>",
+        unsafe_allow_html=True,
+    )
 
 
 st.header(next_launch["name"])
