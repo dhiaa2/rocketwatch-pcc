@@ -529,6 +529,27 @@ with st.expander("🔍 Prove it yourself — our receipts", expanded=True):
         "that's the tracker tracking."
     )
 
+# ----- the data science inside ------------------------------------------------
+with st.expander("🧪 The data science inside"):
+    st.markdown(
+        "- **Live data pipeline** — two real-time feeds (upcoming + past launches), "
+        "each cached 10 minutes with an offline fallback, so one copy of the data "
+        "serves every visitor without hammering the source.\n"
+        "- **Great-circle bearing** — the 287° is computed live from coordinates "
+        "with the spherical bearing formula (atan2 of the longitude delta), "
+        "not typed in. The receipts panel above shows the recompute.\n"
+        "- **Horizon geometry** — distance² ÷ (2 × Earth's radius) says the curve "
+        "hides the first 4.3 km of flight at 235 km; that sets the "
+        "\"visible ~1 minute after liftoff\" claim.\n"
+        "- **Forecast fusion** — cloud cover is pulled for both ends of the sight "
+        "line at launch hour and fused into one honest go-outside/watch-stream "
+        "verdict.\n"
+        "- **Geocoding** — any typed address becomes coordinates (OpenStreetMap "
+        "Nominatim), then the same bearing math runs for that spot.\n\n"
+        "No machine-learning claims — just real math on real live data, "
+        "all checkable in the receipts panel above."
+    )
+
 # ----- from anywhere: your own viewing direction ------------------------------
 st.subheader("From where YOU are")
 st.caption(
