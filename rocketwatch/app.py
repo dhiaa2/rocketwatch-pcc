@@ -355,40 +355,7 @@ try:
 except (KeyError, TypeError, ValueError):
     pad_lat = pad_lon = None
 
-# ----- side by side: compass + the live stream --------------------------------
-rose_col, stream_col = st.columns(2)
-
-with rose_col:
-    st.subheader("Point yourself the right way")
-    st.markdown(compass_rose_svg(BEARING_DEG), unsafe_allow_html=True)
-    st.caption(
-        f"The green arrow points at {BEARING_DEG}° — open your phone's compass, "
-        f"turn until it reads {BEARING_DEG}°, and you are facing the launch."
-    )
-
-with stream_col:
-    st.subheader("Watch it live")
-    stream_url = get_stream_url(next_launch)
-    if stream_url:
-        st.video(stream_url)
-        st.caption("The host's live webcast for this exact launch — plays right here.")
-    else:
-        st.info(
-            "No webcast announced yet for this launch — this box fills in "
-            "automatically the moment a host publishes one."
-        )
-
-    # The announcer: an AI voice reading what the tracker computed.
-    audio_dir = Path(__file__).parent / "audio"
-    if (audio_dir / "announcement.mp3").exists():
-        st.markdown("**🔊 The Launch Announcer** — voice by ElevenLabs, "
-                    "script written from this page's own live data.")
-        st.audio(str(audio_dir / "announcement.mp3"))
-    if (audio_dir / "liftoff.mp3").exists():
-        st.caption("And for the moment itself:")
-        st.audio(str(audio_dir / "liftoff.mp3"))
-
-# ----- will you actually SEE it? ----------------------------------------------
+# ----- the main point: will you actually SEE it? ------------------------------
 st.subheader("Will you see it from campus?")
 pcc_clouds = get_cloud_cover(PCC_LAT, PCC_LON, t_local, WEATHER_PCC_FILE)
 pad_clouds = (
@@ -418,18 +385,54 @@ if pcc_clouds is None:
 elif pcc_clouds >= 70:
     st.warning(
         f"Honest verdict: {pcc_clouds}% cloud cover over campus at launch time — "
-        "watch the stream above, and catch the next clear launch outside."
+        "watch the stream below, and catch the next clear launch outside."
     )
 elif pcc_clouds >= 40:
     st.info(
         f"Mixed sky ({pcc_clouds}% clouds) — step outside at T-2 minutes and look "
-        f"{BEARING_DEG}°; the stream above is your backup."
+        f"{BEARING_DEG}°; the stream below is your backup."
     )
 else:
     st.success(
         f"Good odds ({pcc_clouds}% clouds) — go outside at T-2 minutes, "
         f"face {BEARING_DEG}°, watch the horizon."
     )
+
+# ----- side by side: compass + the live stream --------------------------------
+rose_col, stream_col = st.columns(2)
+
+with rose_col:
+    st.subheader("Point yourself the right way")
+    st.markdown(compass_rose_svg(BEARING_DEG), unsafe_allow_html=True)
+    st.caption(
+        f"The green arrow points at {BEARING_DEG}° — open your phone's compass, "
+        f"turn until it reads {BEARING_DEG}°, and you are facing the launch."
+    )
+
+with stream_col:
+    # The announcer first — an AI voice reading what the tracker computed.
+    audio_dir = Path(__file__).parent / "audio"
+    if (audio_dir / "announcement.mp3").exists():
+        st.subheader("🔊 Hear tonight's plan")
+        st.caption(
+            "Voice by ElevenLabs — the script is this page's own live data."
+        )
+        st.audio(str(audio_dir / "announcement.mp3"))
+
+    st.subheader("Watch it live")
+    stream_url = get_stream_url(next_launch)
+    if stream_url:
+        st.video(stream_url)
+        st.caption("The host's live webcast for this exact launch — plays right here.")
+    else:
+        st.info(
+            "No webcast announced yet for this launch — this box fills in "
+            "automatically the moment a host publishes one."
+        )
+
+    if (audio_dir / "liftoff.mp3").exists():
+        st.caption("And for the moment itself:")
+        st.audio(str(audio_dir / "liftoff.mp3"))
 
 # ----- side by side: the map + the schedules ----------------------------------
 map_col, lists_col = st.columns(2)
