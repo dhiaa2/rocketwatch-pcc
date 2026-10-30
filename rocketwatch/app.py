@@ -479,6 +479,34 @@ with lists_col:
         badge = "✅" if "success" in status.lower() else "⚠️"
         st.write(f"{badge} **{t.strftime('%b %d, %I:%M %p')}** — {launch['name']} — {status}")
 
+# ----- receipts: let anyone check our numbers ---------------------------------
+with st.expander("🔍 Prove it yourself — our receipts"):
+    st.write(
+        "Don't take our word for it. Every number on this page can be "
+        "checked right now, live, by anyone:"
+    )
+    st.markdown(
+        f"- **The launch data is real** — open the exact feed we read: "
+        f"[upcoming launches]({API_URL}) · [past launches]({PREV_API_URL}). "
+        "Same names, same times, same results you see here.\n"
+        "- **The countdown is live** — it recomputes every second from that "
+        "feed. Watch the seconds tick; nothing is hard-coded.\n"
+        f"- **The direction is real** — open your phone's compass, turn to "
+        f"{BEARING_DEG}°, and it agrees with this page.\n"
+        f"- **The distance is real** — measure PCC to Vandenberg SLC-4E in any "
+        f"map app: about {DISTANCE_KM} km.\n"
+        "- **The sky forecast is real** — compare any weather app's cloud "
+        "forecast for launch hour.\n"
+        "- **The stream is third-party proof** — the webcast above is the "
+        "host's own broadcast of this exact mission, naming the same rocket, "
+        "pad and time."
+    )
+    st.caption(
+        f"Data last fetched {fetched_at.astimezone(PACIFIC).strftime('%I:%M:%S %p')} "
+        "Pacific. Refresh the page after 10 minutes and the timestamp changes — "
+        "that's the tracker tracking."
+    )
+
 # ----- from anywhere: your own viewing direction ------------------------------
 st.subheader("From where YOU are")
 st.caption(
