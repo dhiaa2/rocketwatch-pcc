@@ -14,6 +14,8 @@ import streamlit as st
 # ----- settings -------------------------------------------------------------
 API_URL = "https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=10&location__ids=11"
 CACHE_FILE = Path(__file__).parent / "launches.json"
+PREV_API_URL = "https://ll.thespacedevs.com/2.2.0/launch/previous/?limit=4&location__ids=11"
+PREV_CACHE_FILE = Path(__file__).parent / "previous_launches.json"
 CACHE_MINUTES = 10          # how long we trust the saved file before asking again
 PACIFIC = ZoneInfo("America/Los_Angeles")
 
@@ -99,6 +101,38 @@ def get_launches():
         return [], now
 
 
+def get_previous_launches():
+    """Return the last few Vandenberg launches (our proof the tracker works).
+
+    Same manners as get_launches(): trust the saved file for CACHE_MINUTES,
+    ask the API once when it is stale, and fall back to the file if the
+    internet fails so the demo never dies.
+    """
+    now = datetime.datetime.now(datetime.timezone.utc)
+
+    if PREV_CACHE_FILE.exists():
+        saved = json.loads(PREV_CACHE_FILE.read_text(encoding="utf-8"))
+        fetched_at = datetime.datetime.fromisoformat(saved["fetched_at"])
+        age_minutes = (now - fetched_at).total_seconds() / 60
+        if age_minutes < CACHE_MINUTES:
+            return saved["results"]
+
+    try:
+        answer = requests.get(PREV_API_URL, timeout=10)
+        answer.raise_for_status()
+        results = answer.json()["results"]
+        PREV_CACHE_FILE.write_text(
+            json.dumps({"fetched_at": now.isoformat(), "results": results}, indent=2),
+            encoding="utf-8",
+        )
+        return results
+    except Exception:
+        if PREV_CACHE_FILE.exists():
+            saved = json.loads(PREV_CACHE_FILE.read_text(encoding="utf-8"))
+            return saved["results"]
+        return []
+
+
 def launch_time(launch):
     """The launch's planned time as a Python datetime (UTC)."""
     return datetime.datetime.fromisoformat(launch["net"].replace("Z", "+00:00"))
@@ -150,7 +184,7 @@ st.write(f"**Launch time:** {t_local.strftime('%A %B %d, %I:%M:%S %p')} Pacific"
 countdown()
 
 col1, col2, col3 = st.columns(3)
-col1.metric("Where to look from PCC", "West-northwest ↖")
+col1.metric("Where to look from PCC", "WNW ↖")
 col2.metric("Compass bearing", "287°")
 col3.metric("Distance", f"{DISTANCE_KM} km")
 
@@ -170,6 +204,15 @@ st.subheader("Upcoming Vandenberg launches")
 for launch in future[1:6]:
     t = launch_time(launch).astimezone(PACIFIC)
     st.write(f"• **{t.strftime('%b %d, %I:%M %p')}** — {launch['name']}")
+
+# ----- proof it works: launches we already tracked ----------------------------
+st.subheader("Recent launches — proof it works")
+st.caption("The same tracker, pointed backwards: the last real launches from Vandenberg.")
+for launch in get_previous_launches():
+    t = launch_time(launch).astimezone(PACIFIC)
+    status = launch.get("status", {}).get("name", "Unknown")
+    badge = "✅" if "success" in status.lower() else "⚠️"
+    st.write(f"{badge} **{t.strftime('%b %d, %I:%M %p')}** — {launch['name']} — {status}")
 
 st.caption(
     f"Schedule last refreshed {fetched_at.astimezone(PACIFIC).strftime('%I:%M %p')} Pacific. "
