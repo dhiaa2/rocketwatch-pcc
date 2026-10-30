@@ -105,9 +105,16 @@ st.header(next_launch["name"])
 st.write(f"**Launch time:** {t_local.strftime('%A %B %d, %I:%M:%S %p')} Pacific")
 countdown()
 
-col1, col2 = st.columns(2)
-col1.metric("Where to look from PCC", LOOK_DIRECTION)
-col2.metric("Distance", f"{DISTANCE_KM} km")
+col1, col2, col3 = st.columns(3)
+col1.metric("Where to look from PCC", "West-northwest ↖")
+col2.metric("Compass bearing", "287°")
+col3.metric("Distance", f"{DISTANCE_KM} km")
+
+st.write(
+    "🌙 Night launches from Vandenberg are often visible across Southern California, "
+    "weather permitting — look for a bright moving light climbing from the "
+    "west-northwest horizon in the minutes after liftoff."
+)
 
 st.info(
     "Launch times change often — this page re-checks the schedule every "
