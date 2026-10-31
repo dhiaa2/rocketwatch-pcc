@@ -1,0 +1,23 @@
+.globe-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+}
+
+.globe-tooltip {
+  background: rgba(10, 14, 39, 0.9);
+  border: 1px solid #00d9ff;
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+}
+
+.globe-tooltip span {
+  color: #8ab4d0;
+  font-size: 11px;
+}
