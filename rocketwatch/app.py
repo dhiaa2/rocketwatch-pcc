@@ -70,8 +70,8 @@ html, body, .stApp, .stApp p, .stApp li, .stApp label, [data-testid="stMarkdownC
 .stApp [data-testid="stMetricLabel"] p { color: #bdd3e8 !important; font-size: 10px !important; font-weight: 600 !important; letter-spacing: 2.1px !important; text-transform: uppercase !important; }
 .stApp [data-testid="stMetricValue"] p { color: #f6f9ff !important; font-family: "Space Grotesk", sans-serif !important; font-weight: 500 !important; font-size: 32px !important; letter-spacing: -0.02em !important; }
 
-[data-testid="stAlertContainer"] { background: #314230 !important; border: 1px solid #5a663e !important; border-radius: 7px !important; }
-.stApp [data-testid="stAlertContainer"] p { color: #e4dca1 !important; }
+[data-testid="stAlert"], [data-testid="stAlertContainer"], .stApp div[role="alert"] { background: #102d47 !important; border: 1px solid #ffe28a !important; border-left: 4px solid #ffe28a !important; border-radius: 7px !important; }
+.stApp [data-testid="stAlert"] p, .stApp [data-testid="stAlertContainer"] p, .stApp div[role="alert"] p { color: #f4f9ff !important; }
 
 [data-testid="stVideo"], [data-testid="stDeckGlJsonChart"], [data-testid="stAudio"] { border: 1px solid #2c4962 !important; border-radius: 10px !important; overflow: hidden !important; box-shadow: 0 8px 24px rgba(0,0,0,.35) !important; }
 
