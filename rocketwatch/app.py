@@ -42,37 +42,42 @@ st.set_page_config(page_title="Rocket Watch PCC", page_icon="🚀", layout="wide
 # The team may later swap in a NASA photo (public domain, credit NASA).
 st.markdown("""
 <style>
-.stApp {
-  background:
-    radial-gradient(1.5px 1.5px at 25px 35px,  #ffffff, transparent),
-    radial-gradient(1px   1px   at 120px 90px, #cfd8ff, transparent),
-    radial-gradient(1.5px 1.5px at 210px 160px,#ffffff, transparent),
-    radial-gradient(1px   1px   at 60px 140px, #9fb4ff, transparent),
-    radial-gradient(1px   1px   at 170px 40px, #ffffff, transparent),
-    linear-gradient(180deg, #04060f 0%, #0b1030 55%, #1a1448 100%);
-  background-size: 250px 250px, 250px 250px, 250px 250px, 250px 250px, 250px 250px, 100% 100%;
-}
-h1 {
-  background: linear-gradient(90deg, #7dd3fc, #c084fc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.countdown {
-  font-family: 'Courier New', monospace;
-  font-size: 72px;
-  font-weight: bold;
-  text-align: center;
-  color: #7dd3fc;
-  text-shadow: 0 0 18px rgba(125, 211, 252, 0.6);
-  margin: 0.2em 0;
-}
-.countdown-label {
-  text-align: center;
-  color: #9fb4ff;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  font-size: 14px;
-}
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=DM+Sans:wght@400;500;600&display=swap');
+
+html, body, .stApp, .stApp p, .stApp li, .stApp label, [data-testid="stMarkdownContainer"] { font-family: "DM Sans", sans-serif !important; }
+.stApp h1, .stApp h2, .stApp h3 { font-family: "Space Grotesk", sans-serif !important; font-weight: 500 !important; letter-spacing: -0.02em !important; }
+
+.stApp { background:
+  radial-gradient(1.5px 1.5px at 25px 35px, #ffffff, transparent),
+  radial-gradient(1px 1px at 120px 90px, #8ab4d0, transparent),
+  radial-gradient(1.5px 1.5px at 210px 160px, #ffffff, transparent),
+  radial-gradient(1px 1px at 60px 140px, #8fc5fa, transparent),
+  radial-gradient(1px 1px at 170px 40px, #ffffff, transparent),
+  linear-gradient(180deg, #020711 0%, #041021 55%, #0a1a2e 100%);
+  background-size: 250px 250px, 250px 250px, 250px 250px, 250px 250px, 250px 250px, 100% 100%; }
+
+.stApp h1 { background: none !important; -webkit-text-fill-color: #f6f9ff !important; color: #f6f9ff !important; font-size: 52px !important; letter-spacing: -0.03em !important; }
+.stApp h2 { color: #edf5ff !important; border-bottom: 1px solid #25415d !important; padding-bottom: 6px !important; }
+.stApp h3 { color: #e1efff !important; }
+.stApp p { color: #b0c6dc !important; }
+.stApp p strong { color: #eef5ff !important; }
+[data-testid="stCaptionContainer"] p { color: #8ab4d0 !important; }
+
+.countdown { font-family: "Space Grotesk", sans-serif; font-size: 72px; font-weight: 500; text-align: center; color: #ffe28a; letter-spacing: -0.02em; text-shadow: 0 0 14px rgba(255,226,138,.45), 0 0 40px rgba(255,226,138,.18); margin: .2em 0; }
+.countdown-label { text-align: center; color: #bdd3e8; font-size: 10px; font-weight: 600; letter-spacing: 2.1px; text-transform: uppercase; }
+
+[data-testid="stMetric"] { background: #102d47 !important; border: 1px solid #2c4962 !important; border-radius: 10px !important; padding: 14px 18px !important; box-shadow: 0 8px 24px rgba(0,0,0,.35) !important; }
+.stApp [data-testid="stMetricLabel"] p { color: #bdd3e8 !important; font-size: 10px !important; font-weight: 600 !important; letter-spacing: 2.1px !important; text-transform: uppercase !important; }
+.stApp [data-testid="stMetricValue"] p { color: #f6f9ff !important; font-family: "Space Grotesk", sans-serif !important; font-weight: 500 !important; font-size: 32px !important; letter-spacing: -0.02em !important; }
+
+[data-testid="stAlertContainer"] { background: #314230 !important; border: 1px solid #5a663e !important; border-radius: 7px !important; }
+.stApp [data-testid="stAlertContainer"] p { color: #e4dca1 !important; }
+
+[data-testid="stVideo"], [data-testid="stDeckGlJsonChart"], [data-testid="stAudio"] { border: 1px solid #2c4962 !important; border-radius: 10px !important; overflow: hidden !important; box-shadow: 0 8px 24px rgba(0,0,0,.35) !important; }
+
+[data-testid="stExpander"] details, [data-testid="stForm"] { background: rgba(12,37,57,.4) !important; border: 1px solid #2c4962 !important; border-radius: 10px !important; }
+[data-testid="stBaseButton-secondaryFormSubmit"] { background: #ffe28a !important; color: #071424 !important; border: none !important; border-radius: 6px !important; font-weight: 600 !important; }
+
 #MainMenu, footer, header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
